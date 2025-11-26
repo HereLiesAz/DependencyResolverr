@@ -17,6 +17,7 @@ plugins {
 repositories {
     mavenCentral()
     gradlePluginPortal()
+    maven { url = uri("https://repo.gradle.org/gradle/libs-releases") }
 }
 
 kotlin.compilerOptions {
@@ -44,9 +45,17 @@ application {
     mainClass.set("org.cosmic.ide.dependency.resolver.MainKt")
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2")
     implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.16")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.19.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
+    implementation("io.github.g00fy2:versioncompare:1.5.0")
+    implementation("org.gradle:gradle-tooling-api:8.14.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
 }

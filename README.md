@@ -1,30 +1,58 @@
 # DependencyResolver
 
-Provides a simple API to check for, and download artifacts from Maven Central, Google Maven and Jitpack.
-It was created as a lightweight alternative to Eclipse aether for Android. But this would work on any OS.
+A powerful and lightweight dependency resolution library for Maven and Gradle projects.
 
-It is recommended to use snapshot builds from jitpack.
+This library provides a simple yet flexible API to resolve and download artifacts and their transitive dependencies from various repositories, including Maven Central, Google Maven, and Jitpack. It's designed to be a lightweight alternative to more complex dependency management tools, making it ideal for use in build tools, plugins, and other development utilities.
 
-For a proper example, checkout Main.kt.
+## Features
 
-For checking if an artifact exists (in the above mentioned repositories), you can simply do
-```kt
-val groupId = "com.squareup.retrofit2"
-val artifactId = "retrofit"
-val version = "2.9.0"
+*   **Support for Maven and Gradle:** Resolve dependencies from both `pom.xml` and `build.gradle`/`build.gradle.kts` files.
+*   **Transitive Dependency Resolution:** Automatically resolves all transitive dependencies for a given artifact, saving you the hassle of manually specifying each one.
+*   **Version Conflict Resolution:** Intelligently handles version conflicts by selecting the newest compatible version of each dependency.
+*   **Cycle Detection:** Protects against infinite loops by detecting and breaking cyclical dependencies in the dependency graph.
+*   **Extensible API:** A clean and modern API that's easy to use and extend.
 
-val artifact = getArtifact(groupId, artifactId, version)
-val repository = artifact.repository
-if (repository != null) {
-    println("Artifact exists in ${ repository.getName() }")
-} else {
-    println("Cannot find artifact.")
+## Usage
+
+### Resolving Dependencies
+
+The library provides a single entry point for resolving dependencies from both Maven and Gradle projects. Simply provide the project directory, and the library will automatically detect the project type and resolve the dependencies.
+
+```kotlin
+import org.cosmic.ide.dependency.resolver.resolveDependencies
+import java.io.File
+
+suspend fun main() {
+    val projectDir = File(".")
+    val dependencies = resolveDependencies(projectDir)
+    dependencies.forEach { println(it) }
 }
 ```
 
-NOTE: If you only want to download the artifact, you can use the `downloadTo` method instead.
-For downloading an artifact with all of its dependencies, you can do
-```kt
-val output = File("<directory to download artifact>")
-artifact.downloadArtifact(output)
+### Downloading Artifacts
+
+Once you've resolved the dependencies, you can easily download them to a specified directory using the `downloadArtifacts` utility function.
+
+```kotlin
+import org.cosmic.ide.dependency.resolver.downloadArtifacts
+import org.cosmic.ide.dependency.resolver.resolveDependencies
+import java.io.File
+
+suspend fun main() {
+    val projectDir = File(".")
+    val outputDir = File("libs")
+
+    val dependencies = resolveDependencies(projectDir)
+    downloadArtifacts(outputDir, dependencies)
+}
 ```
+
+## API Overview
+
+*   `resolveDependencies(projectDir: File): List<Artifact>`: The main entry point for resolving dependencies. It takes a project directory as input and returns a list of resolved `Artifact` objects.
+*   `downloadArtifacts(output: File, artifacts: List<Artifact>)`: A utility function for downloading a list of artifacts to a specified directory.
+*   `Artifact`: A data class that represents a resolved dependency, containing information such as the group ID, artifact ID, version, and repository.
+
+## Contributing
+
+Contributions are welcome! If you find a bug or have a feature request, please open an issue on the [GitHub repository](<https://www.gnu.org/licenses/>).
