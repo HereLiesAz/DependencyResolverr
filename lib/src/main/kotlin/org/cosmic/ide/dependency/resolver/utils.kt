@@ -274,18 +274,18 @@ fun getLatestRangeVersion(
 
         val afterStart = when {
             startVersionString.isEmpty() -> true
-            startInclusive -> getNewerVersion(vComparable, startVersionString) == vComparable || vComparable == startVersionString
-            else -> getNewerVersion(vComparable, startVersionString) == vComparable && vComparable != startVersionString // strictly greater
+            startInclusive -> io.github.g00fy2.versioncompare.Version(vComparable).isAtLeast(startVersionString)
+            else -> io.github.g00fy2.versioncompare.Version(vComparable).isHigherThan(startVersionString)
         }
 
         val beforeEnd = when {
             endVersionString.isEmpty() -> true
-            endInclusive -> getNewerVersion(vComparable, endVersionString) == endVersionString || vComparable == endVersionString
-            else -> getNewerVersion(vComparable, endVersionString) == endVersionString && vComparable != endVersionString // strictly lesser
+            endInclusive -> io.github.g00fy2.versioncompare.Version(vComparable).isLowerThan(endVersionString) || vComparable == endVersionString
+            else -> io.github.g00fy2.versioncompare.Version(vComparable).isLowerThan(endVersionString)
         }
 
         if (afterStart && beforeEnd) {
-            if (bestVersion == null || getNewerVersion(bestVersion, vComparable) == vComparable) {
+            if (bestVersion == null || io.github.g00fy2.versioncompare.Version(vComparable).isHigherThan(bestVersion!!)) {
                 bestVersion = vComparable
             }
         }
@@ -303,13 +303,13 @@ fun getLatestRangeVersion(
     if (resolvedVersionFromCache != null) {
          val afterStart = when {
             startVersionString.isEmpty() -> true
-            startInclusive -> getNewerVersion(resolvedVersionFromCache, startVersionString) == resolvedVersionFromCache || resolvedVersionFromCache == startVersionString
-            else -> getNewerVersion(resolvedVersionFromCache, startVersionString) == resolvedVersionFromCache && resolvedVersionFromCache != startVersionString
+            startInclusive -> io.github.g00fy2.versioncompare.Version(resolvedVersionFromCache).isAtLeast(startVersionString)
+            else -> io.github.g00fy2.versioncompare.Version(resolvedVersionFromCache).isHigherThan(startVersionString)
         }
         val beforeEnd = when {
             endVersionString.isEmpty() -> true
-            endInclusive -> getNewerVersion(resolvedVersionFromCache, endVersionString) == endVersionString || resolvedVersionFromCache == endVersionString
-            else -> getNewerVersion(resolvedVersionFromCache, endVersionString) == endVersionString && resolvedVersionFromCache != endVersionString
+            endInclusive -> io.github.g00fy2.versioncompare.Version(resolvedVersionFromCache).isLowerThan(endVersionString) || resolvedVersionFromCache == endVersionString
+            else -> io.github.g00fy2.versioncompare.Version(resolvedVersionFromCache).isLowerThan(endVersionString)
         }
         if (afterStart && beforeEnd) return resolvedVersionFromCache
     }
@@ -318,37 +318,6 @@ fun getLatestRangeVersion(
         ?: artifact.mavenMetadata!!.versioning.latest
         ?: startVersionString.takeIf { it.isNotEmpty() } // Default to start of range if specified
         ?: versionRange // Last resort original range string
-}
-
-fun getNewerVersion(existing: String, new: String): String {
-    // This comparison needs to be robust for Maven versioning (e.g., 1.0, 1.0.0-alpha, 1.0.0-beta, 1.0.0-SNAPSHOT)
-    // A simple string comparison is often NOT sufficient.
-    // For now, placeholder:
-    // Ideally, use a proper Maven ComparableVersion or similar library.
-    // If not available, this is a known limitation.
-    // Let's assume a simplified lexicographical comparison for now, favoring longer strings if prefixes match.
-    if (new.startsWith(existing) && new.length > existing.length) return new // e.g. 1.10 vs 1.1
-    if (existing.startsWith(new) && existing.length > new.length) return existing
-
-    // Simple lexicographical might be okay for basic numeric versions like "1.2.3" vs "1.2.10"
-    // but fails for "1.9" vs "1.10" (1.9 is "greater").
-    // A proper implementation would parse segments.
-    // For the sake of this example, and lacking a robust comparator in context:
-    val newSegments = new.split('.', '-').mapNotNull { it.toIntOrNull() }
-    val existingSegments = existing.split('.', '-').mapNotNull { it.toIntOrNull() }
-
-    for (i in 0 until minOf(newSegments.size, existingSegments.size)) {
-        if (newSegments[i] > existingSegments[i]) return new
-        if (newSegments[i] < existingSegments[i]) return existing
-    }
-    // If one is prefix of other, the longer one is generally newer in numeric parts
-    // e.g. 1.2.3 vs 1.2 ; 1.2.3 is newer
-    if (newSegments.size > existingSegments.size) return new
-    if (existingSegments.size > newSegments.size) return existing
-
-    // If numeric parts are identical, consider qualifiers or original string length.
-    // This is still very basic.
-    return if (new >= existing) new else existing // Fallback to string comparison.
 }
 
 /*
@@ -363,3 +332,25 @@ suspend fun <T> Iterable<T>.parallelForEach(action: suspend (T) -> Unit) = corou
     }.awaitAll()
 }
 
+suspend fun resolveDependencies(projectDir: java.io.File): List<Artifact> {
+    val resolver = when {
+        java.io.File(projectDir, "pom.xml").exists() -> MavenResolver()
+        java.io.File(projectDir, "build.gradle").exists() -> org.cosmic.ide.dependency.resolver.gradle.GradleResolver()
+        java.io.File(projectDir, "build.gradle.kts").exists() -> org.cosmic.ide.dependency.resolver.gradle.GradleResolver()
+        else -> throw IllegalArgumentException("Unsupported project type")
+    }
+    return resolver.resolve(projectDir)
+}
+
+suspend fun downloadArtifacts(output: java.io.File, artifacts: List<Artifact>) {
+    output.mkdirs()
+    artifacts.parallelForEach { artifact ->
+        if (artifact.repository == null) {
+            initHost(artifact)
+        }
+        val artifactFile = java.io.File(output, "${artifact.artifactId}-${artifact.version}.${artifact.extension}")
+        if (!artifactFile.exists()) {
+            artifact.downloadTo(artifactFile)
+        }
+    }
+}

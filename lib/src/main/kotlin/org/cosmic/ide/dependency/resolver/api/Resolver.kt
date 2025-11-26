@@ -5,21 +5,10 @@
  * You should have received a copy of the GNU General Public License along with Cosmic IDE. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.cosmic.ide.dependency.resolver
+package org.cosmic.ide.dependency.resolver.api
 
 import java.io.File
-import kotlin.system.measureTimeMillis
-import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalTime::class)
-suspend fun main() {
-    val dir = File("test")
-    dir.deleteRecursively()
-    dir.mkdir()
-
-    val time = measureTimeMillis {
-        val dependencies = resolveDependencies(File("."))
-        downloadArtifacts(dir, dependencies)
-    }
-    println("Time taken: $time ms")
+interface Resolver {
+    suspend fun resolve(projectDir: File): List<Artifact>
 }
