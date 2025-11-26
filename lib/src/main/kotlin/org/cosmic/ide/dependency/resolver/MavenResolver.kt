@@ -23,7 +23,7 @@ class MavenResolver : Resolver {
         }
 
         val pom = xmlDeserializer.readValue(pomFile, ProjectObjectModel::class.java)
-        val artifact = Artifact(requireNotNull(pom.groupId), pom.artifactId, requireNotNull(pom.version))
+        val rootArtifact = Artifact(requireNotNull(pom.groupId), pom.artifactId, requireNotNull(pom.version))
 
         val resolved = ConcurrentHashMap<Pair<String, String>, Pair<Artifact, ConcurrentLinkedDeque<Artifact>>>()
         val managedDependencies = ConcurrentLinkedDeque<Artifact>()
