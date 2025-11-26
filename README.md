@@ -11,6 +11,7 @@ This library provides a simple yet flexible API to resolve and download artifact
 *   **Transitive Dependency Resolution:** Automatically resolves all transitive dependencies for a given artifact, saving you the hassle of manually specifying each one.
 *   **Version Conflict Resolution:** Intelligently handles version conflicts by selecting the newest compatible version of each dependency.
 *   **Cycle Detection:** Protects against infinite loops by detecting and breaking cyclical dependencies in the dependency graph.
+*   **Classifier Support:** Resolve and download artifacts with classifiers.
 *   **Extensible API:** A clean and modern API that's easy to use and extend.
 
 ```
@@ -58,7 +59,7 @@ suspend fun main() {
 
 *   `resolveDependencies(projectDir: File): List<Artifact>`: The main entry point for resolving dependencies. It takes a project directory as input and returns a list of resolved `Artifact` objects.
 *   `downloadArtifacts(output: File, artifacts: List<Artifact>)`: A utility function for downloading a list of artifacts to a specified directory.
-*   `Artifact`: A data class that represents a resolved dependency, containing information such as the group ID, artifact ID, version, and repository.
+*   `Artifact`: A data class that represents a resolved dependency, containing information such as the group ID, artifact ID, version, classifier, and repository.
 
 ## Deprecated API
 
