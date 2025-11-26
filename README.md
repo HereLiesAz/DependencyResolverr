@@ -13,6 +13,12 @@ This library provides a simple yet flexible API to resolve and download artifact
 *   **Cycle Detection:** Protects against infinite loops by detecting and breaking cyclical dependencies in the dependency graph.
 *   **Extensible API:** A clean and modern API that's easy to use and extend.
 
+```
+dependencies {
+	        implementation("com.github.HereLiesAz:DependencyResolverr:Tag")
+	}
+```
+
 ## Usage
 
 ### Resolving Dependencies
