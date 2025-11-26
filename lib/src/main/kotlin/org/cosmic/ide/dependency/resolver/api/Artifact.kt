@@ -244,7 +244,7 @@ data class Artifact(
      * @return The local path of the artifact.
      */
     fun getLocalPath(outputDir: File): File {
-        val classifierString = if (classifier != null) "-$classifier" else ""
+        val classifierString = if (!classifier.isNullOrEmpty()) "-$classifier" else ""
         return File(outputDir, "$artifactId-$version$classifierString.$extension")
     }
 
