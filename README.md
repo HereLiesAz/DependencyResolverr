@@ -16,7 +16,7 @@ This library provides a simple yet flexible API to resolve and download artifact
 
 ```
 dependencies {
-	        implementation("com.github.HereLiesAz:DependencyResolverr:1.2.2")
+	        implementation("com.github.HereLiesAz:DependencyResolverr:1.2.4")
 	}
 ```
 
