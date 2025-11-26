@@ -77,3 +77,13 @@ suspend fun main() {
     artifact?.downloadArtifact(dir)
 }
 ```
+
+## API Overview
+
+*   `resolveDependencies(projectDir: File): List<Artifact>`: The main entry point for resolving dependencies. It takes a project directory as input and returns a list of resolved `Artifact` objects.
+*   `downloadArtifacts(output: File, artifacts: List<Artifact>)`: A utility function for downloading a list of artifacts to a specified directory.
+*   `Artifact`: A data class that represents a resolved dependency, containing information such as the group ID, artifact ID, version, and repository.
+
+## Contributing
+
+Contributions are welcome! If you find a bug or have a feature request, please open an issue on the [GitHub repository](<https://www.gnu.org/licenses/>).
