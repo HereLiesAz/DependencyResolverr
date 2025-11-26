@@ -23,11 +23,23 @@ class MavenResolver : Resolver {
         }
 
         val pom = xmlDeserializer.readValue(pomFile, ProjectObjectModel::class.java)
-        val artifact = Artifact(pom.groupId!!, pom.artifactId, pom.version!!)
+        val rootArtifact = Artifact(pom.groupId!!, pom.artifactId, pom.version!!)
 
-        resolveDependencyTree(artifact)
+        val resolved = ConcurrentHashMap<Pair<String, String>, Pair<Artifact, ConcurrentLinkedDeque<Artifact>>>()
+        val managedDependencies = ConcurrentLinkedDeque<Artifact>()
 
-        return getAllDependencies(artifact).toList()
+        // Manually resolve the direct dependencies from the project's pom.xml
+        val directDependencies = pom.resolveDependencies(resolved, managedDependencies)
+        rootArtifact.dependencies = directDependencies.toList()
+
+        // Now, for each direct dependency, resolve its entire dependency tree
+        directDependencies.parallelForEach { dependency ->
+            resolveDependencyTree(dependency, resolved, managedDependencies)
+        }
+
+        // Collect all unique dependencies and resolve version conflicts
+        val allDependencies = getAllDependencies(rootArtifact).toList()
+        return allDependencies
     }
 
     private fun getAllDependencies(artifact: Artifact): Set<Artifact> {
